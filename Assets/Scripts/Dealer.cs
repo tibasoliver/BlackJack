@@ -83,6 +83,7 @@ public class Dealer : MonoBehaviour
             Vector3 nextPosition = new Vector3(numberCardOfRow * 0.28f, numberOfCardsOfPlayer * 0.01f, numberCardOfRow * 0.30f) +
                 new Vector3(-0.10f,0f,-0.8f)*numberOfRows;
 
+            changeYFromCardBeforeMoviment(tempCardGameObject, playerHandPosition.position.y + nextPosition.y);
             movimentScript.target = playerHandPosition.position + nextPosition;
 
             handController.playerCards.Add(tempCardScriptableObject);
@@ -103,10 +104,18 @@ public class Dealer : MonoBehaviour
             int numberOfCardsOfDealer = handController.dealerCards.Count;
 
             Vector3 nextPosition = new Vector3(numberOfCardsOfDealer * 0.28f, numberOfCardsOfDealer * 0.01f, 0);
+            changeYFromCardBeforeMoviment(tempCardGameObject, nextPosition.y);
             movimentScript.target = dealerHandPosition.position + nextPosition;
 
             handController.dealerCards.Add(tempCardScriptableObject);
             handController.dealerCardCollection.Add(tempCardGameObject);
         }
+    }
+
+    void changeYFromCardBeforeMoviment(GameObject obj, float height)
+    {
+        Vector3 newPosition = tempCardGameObject.transform.position;
+        newPosition.y = height;
+        tempCardGameObject.transform.position = newPosition;
     }
 }
