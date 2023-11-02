@@ -15,12 +15,15 @@ public class Dealer : MonoBehaviour
     private CardScriptableObject tempCardScriptableObject;
     private GameObject tempCardGameObject;
 
+    private float delayBetweenCards = 1.0f;
 
     // Start is called before the first frame update
     void Start()
     {
         //drawCardToPlayer();
         //drawCard(out tempCardScriptableObject, out tempCardGameObject);
+
+        StartCoroutine(DeliverInitialCards());
     }
 
     // Update is called once per frame
@@ -117,5 +120,17 @@ public class Dealer : MonoBehaviour
         Vector3 newPosition = tempCardGameObject.transform.position;
         newPosition.y = height;
         tempCardGameObject.transform.position = newPosition;
+    }
+
+    IEnumerator DeliverInitialCards()
+    {
+        for(int i=0; i<4; i++)
+        {
+            yield return new WaitForSeconds(delayBetweenCards);
+            if (i % 2 == 0)
+                drawCardToDealer();
+            else
+                drawCardToPlayer();
+        }
     }
 }
