@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class Dealer : MonoBehaviour
@@ -31,19 +32,26 @@ public class Dealer : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            drawCardToPlayer();
+            //drawCardToPlayer();
             // Coloque aqui o código que você deseja executar quando a tecla 'Espaço' for pressionada.
             //drawCard(out tempCardScriptableObject,out tempCardGameObject);
+            StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Player));
         }
 
         if (Input.GetKeyDown(KeyCode.N))
         {
-            drawCardToDealer();
+            //drawCardToDealer();
+            StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Dealer));
         }
     }
 
     void drawCard(out CardScriptableObject resultCardScriptable, out GameObject resultCardGameObject)
     {
+        //AudioManager.Instance.PlayDrawCardEffect();
+
+        float ajustmentDelayBetweenCardAndAudio = 10.0f;
+        //StartCoroutine(PreciseDelayCoroutine(ajustmentDelayBetweenCardAndAudio));
+
         CardScriptableObject card = deckController.drawCardFromTop();
         if (card != null)
         {
@@ -64,7 +72,7 @@ public class Dealer : MonoBehaviour
             resultCardScriptable = null;
             resultCardGameObject = null;
         }
-    }   
+    }
 
     void drawCardToPlayer()
     {
@@ -75,7 +83,7 @@ public class Dealer : MonoBehaviour
             movimentScript.targetRot = tempCardGameObject.transform.rotation;
 
             int numberOfCardsOfPlayer = handController.playerCards.Count;
-            int numberOfRows = (numberOfCardsOfPlayer ) / 3;
+            int numberOfRows = (numberOfCardsOfPlayer) / 3;
             int numberCardOfRow = (numberOfCardsOfPlayer) % 3;
 
             //scale 0.7878
@@ -84,16 +92,18 @@ public class Dealer : MonoBehaviour
 
             //scale 1.5
             Vector3 nextPosition = new Vector3(numberCardOfRow * 0.28f, numberOfCardsOfPlayer * 0.01f, numberCardOfRow * 0.30f) +
-                new Vector3(-0.10f,0f,-0.8f)*numberOfRows;
+                new Vector3(-0.10f, 0f, -0.8f) * numberOfRows;
 
             changeYFromCardBeforeMoviment(tempCardGameObject, playerHandPosition.position.y + nextPosition.y);
             movimentScript.target = playerHandPosition.position + nextPosition;
 
             handController.playerCards.Add(tempCardScriptableObject);
             handController.playerCardCollection.Add(tempCardGameObject);
+
+
         }
 
-        
+
     }
 
     void drawCardToDealer()
@@ -110,7 +120,8 @@ public class Dealer : MonoBehaviour
             changeYFromCardBeforeMoviment(tempCardGameObject, nextPosition.y);
             movimentScript.target = dealerHandPosition.position + nextPosition;
 
-            handController.dealerCards.Add(tempCardScriptableObject);
+            //handController.dealerCards.Add(tempCardScriptableObject);
+            handController.AddCard(tempCardScriptableObject);
             handController.dealerCardCollection.Add(tempCardGameObject);
         }
     }
@@ -124,13 +135,40 @@ public class Dealer : MonoBehaviour
 
     IEnumerator DeliverInitialCards()
     {
-        for(int i=0; i<4; i++)
+        for (int i = 0; i < 4; i++)
         {
             yield return new WaitForSeconds(delayBetweenCards);
             if (i % 2 == 0)
-                drawCardToDealer();
+            {
+                //drawCardToDealer();
+                StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Dealer));
+            }
             else
-                drawCardToPlayer();
+            {
+                //drawCardToPlayer();
+                StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Player));
+            }
+                
         }
+    }
+
+    IEnumerator DrawCardsWithPreciseDelayCoroutine(float delay, Participant participant)
+    {
+        AudioManager.Instance.PlayDrawCardEffect();
+        yield return new WaitForSeconds(delay);
+        if(participant == Participant.Player)
+        {
+            drawCardToPlayer();
+        }
+        else
+        {
+            drawCardToDealer();
+        }
+    }
+
+    enum Participant
+    {
+        Player,
+        Dealer
     }
 }
