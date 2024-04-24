@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -30,19 +31,19 @@ public class Dealer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            //drawCardToPlayer();
-            // Coloque aqui o código que você deseja executar quando a tecla 'Espaço' for pressionada.
-            //drawCard(out tempCardScriptableObject,out tempCardGameObject);
-            StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Player));
-        }
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    //drawCardToPlayer();
+        //    // Coloque aqui o código que você deseja executar quando a tecla 'Espaço' for pressionada.
+        //    //drawCard(out tempCardScriptableObject,out tempCardGameObject);
+        //    StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Player));
+        //}
 
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            //drawCardToDealer();
-            StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Dealer));
-        }
+        //if (Input.GetKeyDown(KeyCode.N))
+        //{
+        //    //drawCardToDealer();
+        //    StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Dealer));
+        //}
     }
 
     void drawCard(out CardScriptableObject resultCardScriptable, out GameObject resultCardGameObject)
@@ -61,7 +62,7 @@ public class Dealer : MonoBehaviour
             Renderer renderer = face.GetComponent<Renderer>();
             Material material = renderer.material;
             Texture2D frontFaceTexture = Resources.Load<Texture2D>("FrontFace/" + card.backImage);
-            Debug.Log(card.backImage);
+            //Debug.Log(card.backImage);
             material.SetTexture("_MainTex", frontFaceTexture);
 
             resultCardScriptable = card;
@@ -74,7 +75,7 @@ public class Dealer : MonoBehaviour
         }
     }
 
-    void drawCardToPlayer()
+    public void drawCardToPlayer()
     {
         drawCard(out tempCardScriptableObject, out tempCardGameObject);
         if (tempCardGameObject != null && tempCardScriptableObject != null)
@@ -82,7 +83,7 @@ public class Dealer : MonoBehaviour
             MovimentCard movimentScript = tempCardGameObject.GetComponent<MovimentCard>();
             movimentScript.targetRot = tempCardGameObject.transform.rotation;
 
-            int numberOfCardsOfPlayer = handController.playerCards.Count;
+            int numberOfCardsOfPlayer = HandController.playerCards.Count;
             int numberOfRows = (numberOfCardsOfPlayer) / 3;
             int numberCardOfRow = (numberOfCardsOfPlayer) % 3;
 
@@ -97,10 +98,23 @@ public class Dealer : MonoBehaviour
             changeYFromCardBeforeMoviment(tempCardGameObject, playerHandPosition.position.y + nextPosition.y);
             movimentScript.target = playerHandPosition.position + nextPosition;
 
-            handController.playerCards.Add(tempCardScriptableObject);
+            HandController.playerCards.Add(tempCardScriptableObject);
             handController.playerCardCollection.Add(tempCardGameObject);
 
+            //////////////-------
+            ScoreBoard scoreBoard = new ScoreBoard(HandController.dealerCards, HandController.playerCards);
+            (int, int) scoreDealer = scoreBoard.CalculatePlayerPoints();
+            //Debug.Log(scoreDealer);
 
+            string newScorePlayer = NormalizeScore(scoreDealer);
+            //Debug.Log(newScorePlayer);
+
+            PlayerPointsUI myScript = FindObjectOfType<PlayerPointsUI>();
+            if (myScript != null)
+            {
+                myScript.UpdateText(newScorePlayer);
+                myScript.ChangeStyle(scoreBoard.CalculateStatus(ScoreBoard.Participant.Player));
+            }
         }
 
 
@@ -114,7 +128,7 @@ public class Dealer : MonoBehaviour
             MovimentCard movimentScript = tempCardGameObject.GetComponent<MovimentCard>();
             movimentScript.targetRot = tempCardGameObject.transform.rotation;
 
-            int numberOfCardsOfDealer = handController.dealerCards.Count;
+            int numberOfCardsOfDealer = HandController.dealerCards.Count;
 
             Vector3 nextPosition = new Vector3(numberOfCardsOfDealer * 0.28f, numberOfCardsOfDealer * 0.01f, 0);
             changeYFromCardBeforeMoviment(tempCardGameObject, nextPosition.y);
@@ -123,6 +137,21 @@ public class Dealer : MonoBehaviour
             //handController.dealerCards.Add(tempCardScriptableObject);
             handController.AddCard(tempCardScriptableObject);
             handController.dealerCardCollection.Add(tempCardGameObject);
+            //////////////-------
+            //Debug.Log("OI");
+            ScoreBoard scoreBoard = new ScoreBoard(HandController.dealerCards, HandController.playerCards);
+            (int, int) scoreDealer = scoreBoard.CalculateDealerPoints();
+            //Debug.Log(scoreDealer);
+
+            string newScoreDealer = NormalizeScore(scoreDealer);
+            //Debug.Log(newScoreDealer);
+
+            DealerPointsUI myScript = FindObjectOfType<DealerPointsUI>();
+            if (myScript != null)
+            {
+                myScript.UpdateText(newScoreDealer);
+                myScript.ChangeStyle(scoreBoard.CalculateStatus(ScoreBoard.Participant.Dealer));
+            }
         }
     }
 
@@ -131,6 +160,11 @@ public class Dealer : MonoBehaviour
         Vector3 newPosition = tempCardGameObject.transform.position;
         newPosition.y = height;
         tempCardGameObject.transform.position = newPosition;
+    }
+
+    public void DealerPlay()
+    {
+        StartCoroutine(DealerActionSequence());
     }
 
     IEnumerator DeliverInitialCards()
@@ -150,9 +184,11 @@ public class Dealer : MonoBehaviour
             }
                 
         }
+
+        
     }
 
-    IEnumerator DrawCardsWithPreciseDelayCoroutine(float delay, Participant participant)
+    public IEnumerator DrawCardsWithPreciseDelayCoroutine(float delay, Participant participant)
     {
         AudioManager.Instance.PlayDrawCardEffect();
         yield return new WaitForSeconds(delay);
@@ -164,11 +200,79 @@ public class Dealer : MonoBehaviour
         {
             drawCardToDealer();
         }
+        TurnSystem.EndTurn();
     }
 
-    enum Participant
+    IEnumerator DealerActionSequence()
+    {
+        ScoreBoard scoreBoard = new ScoreBoard(HandController.dealerCards,
+            HandController.playerCards);
+        (int, int) scoreDealer = scoreBoard.CalculateDealerPoints();
+
+        //Calculates if dealer has more points than player
+        while (!ScoreBoard.DetermineDealerWinStatus() && 
+            (scoreDealer.Item1 < 21 || scoreDealer.Item2 < 21))
+        {
+            yield return new WaitForSeconds(2f);
+            yield return StartCoroutine(DrawCardsWithPreciseDelayCoroutine(0.55f, Participant.Dealer));
+            scoreDealer = scoreBoard.CalculateDealerPoints();
+        }
+        TurnSystem.EndTurn();
+    }
+
+    public enum Participant
     {
         Player,
         Dealer
+    }
+
+    public static string NormalizeScore((int, int) score)
+    {
+        if(score.Item1 == 21 ||
+            score.Item2 == 21)
+        {
+            return "21";
+        }
+        else if (score.Item1 < 21 &&
+            score.Item2 > 21)
+        {
+            return score.Item1.ToString();
+        }
+        else if (score.Item1 > 21 &&
+            score.Item2 < 21)
+        {
+            return score.Item2.ToString();
+        }
+        else if (score.Item1 > 21 &&
+            score.Item2 > 21 && 
+            score.Item1 == score.Item2)
+        {
+            return score.Item1.ToString();
+        }
+        else if (score.Item1 > 21 &&
+            score.Item2 > 21 &&
+            score.Item1 != score.Item2)
+        {
+            return (score.Item1 < score.Item2 ?
+                score.Item1.ToString() :
+                score.Item2.ToString());
+        }
+        else if(score.Item1 < 21 &&
+            score.Item2 < 21 &&
+            score.Item1 == score.Item2)
+        {
+            return score.Item1.ToString();
+        }
+        else if (score.Item1 < 21 &&
+            score.Item2 < 21 &&
+            score.Item1 != score.Item2)
+        {
+            return (score.Item1 < score.Item2 ?
+                score.Item1.ToString() +
+                "/" + score.Item2.ToString() :
+                score.Item2.ToString() +
+                "/" + score.Item1.ToString());
+        }
+        return "";
     }
 }

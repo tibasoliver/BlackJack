@@ -6,8 +6,8 @@ using UnityEngine;
 
 public class HandController : MonoBehaviour
 {
-    public List<CardScriptableObject> playerCards = new List<CardScriptableObject>();
-    public List<CardScriptableObject> dealerCards = new List<CardScriptableObject>();
+    public static List<CardScriptableObject> playerCards = new List<CardScriptableObject>();
+    public static List<CardScriptableObject> dealerCards = new List<CardScriptableObject>();
 
     public List<GameObject> playerCardCollection = new List<GameObject>();
     public List<GameObject> dealerCardCollection = new List<GameObject>();
@@ -59,6 +59,6 @@ public class HandController : MonoBehaviour
 
     private void CardAddedHandler(CardScriptableObject card)
     {
-        Debug.Log("Um cartão foi adicionado: " + card.name + " com valor: "+ (card.value + 1));
+        //Debug.Log("Um cartão foi adicionado: " + card.name + " com valor: "+ (card.value + 1));
     }
 }
