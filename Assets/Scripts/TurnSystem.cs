@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class TurnSystem : MonoBehaviour
 {
-    public static PlayerTurn currentTurn = PlayerTurn.None;
+    public static PlayerTurn currentTurn;
     public static Transform positionToInstantiateEndStatusDealer;
     public static Transform positionToInstantiateEndStatusPlayer;
     public static Transform parent;
@@ -17,6 +17,7 @@ public class TurnSystem : MonoBehaviour
 
     private void Awake()
     {
+
         positionToInstantiateEndStatusDealer = 
             GameObject.Find("PositionDealerStatus").transform;
         positionToInstantiateEndStatusPlayer =

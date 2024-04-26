@@ -11,12 +11,6 @@ public class PlayerActionButtonsManager : MonoBehaviour
     public static Button restartButton;
     public Dealer dealer;
 
-    public static bool enableToClick = true;
-    public static float cooldown = 2f;
-    public static float lastClickTime;
-
-    private static readonly object lockObject = new object();
-
     void Awake()
     {
         hitButton = GameObject.Find("HitButton").GetComponent<Button>();
@@ -35,7 +29,8 @@ public class PlayerActionButtonsManager : MonoBehaviour
 
     public static void Restart()
     {
-        SceneManager.LoadScene(0);
+        TurnSystem.currentTurn = TurnSystem.PlayerTurn.None;
+        SceneManager.LoadScene(0, LoadSceneMode.Single);
     }
 
     public static void ToggleUIButtons(bool enableHitButton, bool enableStandButton,

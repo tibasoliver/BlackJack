@@ -22,9 +22,8 @@ public class PlayerPointsUI : MonoBehaviour, IUpdateableText, IStyleChange
     {
         PlayerPointsUI.playerPointsText = GetComponent<TextMeshProUGUI>();
         imageScore = GetComponentInParent<Image>();
-            playerPointsText.color = Color.black;
-            imageScore.material.SetColor("_Color", new Color(250 / 255f, 255 / 255f, 109 / 255f));
-
+        playerPointsText.color = Color.black;
+        imageScore.material.SetColor("_Color", new Color(250 / 255f, 255 / 255f, 109 / 255f));
         ToggleScoreUI();
     }
 

@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class HandController : MonoBehaviour
 {
-    public static List<CardScriptableObject> playerCards = new List<CardScriptableObject>();
-    public static List<CardScriptableObject> dealerCards = new List<CardScriptableObject>();
+    public static List<CardScriptableObject> playerCards;
+    public static List<CardScriptableObject> dealerCards;
 
-    public List<GameObject> playerCardCollection = new List<GameObject>();
-    public List<GameObject> dealerCardCollection = new List<GameObject>();
+    public List<GameObject> playerCardCollection;
+    public List<GameObject> dealerCardCollection;
 
     public event Action<CardScriptableObject> OnCardAdded;
 
@@ -19,6 +19,11 @@ public class HandController : MonoBehaviour
     public static HandController instance;
     private void Awake()
     {
+        playerCards = new List<CardScriptableObject>();
+        dealerCards = new List<CardScriptableObject>();
+        playerCardCollection = new List<GameObject>();
+        dealerCardCollection = new List<GameObject>();
+
         instance = this;
         this.OnCardAdded += CardAddedHandler;
     }
